@@ -1,2 +1,565 @@
 # color-rush-game
 Index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Color Rush</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #141e30, #243b55);
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.game {
+    width: 100%;
+    max-width: 430px;
+    background: rgba(255,255,255,0.10);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 25px;
+    padding: 22px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+    text-align: center;
+}
+
+h1 {
+    font-size: 32px;
+    margin-bottom: 5px;
+}
+
+.subtitle {
+    opacity: 0.7;
+    margin-bottom: 20px;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.stat {
+    background: rgba(0,0,0,0.25);
+    padding: 12px 5px;
+    border-radius: 15px;
+}
+
+.stat span {
+    display: block;
+    font-size: 12px;
+    opacity: 0.7;
+}
+
+.stat strong {
+    font-size: 20px;
+}
+
+.timer-box {
+    margin: 15px auto;
+}
+
+.timer {
+    font-size: 48px;
+    font-weight: bold;
+}
+
+.progress {
+    height: 7px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    width: 100%;
+    background: #00e676;
+    transition: width 1s linear;
+}
+
+.result {
+    min-height: 70px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 15px 0;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.color-buttons {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.color-btn {
+    border: none;
+    padding: 18px 5px;
+    border-radius: 18px;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.color-btn:hover {
+    transform: translateY(-3px);
+}
+
+.color-btn:active {
+    transform: scale(0.95);
+}
+
+.red {
+    background: linear-gradient(135deg, #ff1744, #d50000);
+}
+
+.blue {
+    background: linear-gradient(135deg, #2979ff, #2962ff);
+}
+
+.green {
+    background: linear-gradient(135deg, #00c853, #00a844);
+}
+
+.color-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.reset {
+    margin-top: 20px;
+    padding: 11px 22px;
+    border: none;
+    border-radius: 12px;
+    background: white;
+    color: #222;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.message {
+    margin-top: 15px;
+    min-height: 25px;
+}
+
+.level-up {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    z-index: 10;
+}
+
+.level-card {
+    background: linear-gradient(135deg, #673ab7, #3f51b5);
+    padding: 35px;
+    border-radius: 25px;
+    text-align: center;
+    animation: pop 0.4s ease;
+}
+
+.level-card h2 {
+    font-size: 35px;
+    margin-bottom: 10px;
+}
+
+.level-card button {
+    margin-top: 20px;
+    padding: 12px 30px;
+    border: none;
+    border-radius: 12px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+@keyframes pop {
+    from {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@media (max-width: 350px) {
+    h1 {
+        font-size: 27px;
+    }
+
+    .color-btn {
+        font-size: 14px;
+        padding: 15px 3px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="game">
+
+    <h1>🎨 Color Rush</h1>
+    <p class="subtitle">Predict the next color!</p>
+
+    <div class="stats">
+        <div class="stat">
+            <span>🪙 COINS</span>
+            <strong id="coins">100</strong>
+        </div>
+
+        <div class="stat">
+            <span>🏆 LEVEL</span>
+            <strong id="level">1</strong>
+        </div>
+
+        <div class="stat">
+            <span>🔥 STREAK</span>
+            <strong id="streak">0</strong>
+        </div>
+    </div>
+
+    <div class="timer-box">
+        <div class="timer" id="timer">10</div>
+
+        <div class="progress">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+    </div>
+
+    <div class="result" id="result">
+        Choose a color!
+    </div>
+
+    <div class="color-buttons">
+
+        <button class="color-btn red"
+                data-color="red"
+                onclick="makePrediction('red')">
+            🔴 RED
+        </button>
+
+        <button class="color-btn blue"
+                data-color="blue"
+                onclick="makePrediction('blue')">
+            🔵 BLUE
+        </button>
+
+        <button class="color-btn green"
+                data-color="green"
+                onclick="makePrediction('green')">
+            🟢 GREEN
+        </button>
+
+    </div>
+
+    <div class="message" id="message"></div>
+
+    <button class="reset" onclick="resetGame()">
+        🔄 Reset Game
+    </button>
+
+</div>
+
+<div class="level-up" id="levelUp">
+
+    <div class="level-card">
+
+        <h2>🎉 LEVEL UP!</h2>
+
+        <p>You reached Level <strong id="newLevel">2</strong></p>
+
+        <button onclick="closeLevelUp()">
+            Continue 🚀
+        </button>
+
+    </div>
+
+</div>
+
+<script>
+
+const STORAGE_KEY = "colorRushGame";
+
+let game = {
+    coins: 100,
+    level: 1,
+    streak: 0
+};
+
+let timeLeft = 10;
+let timerInterval = null;
+let roundActive = false;
+let predictionMade = false;
+let currentColor = null;
+
+const coinsEl = document.getElementById("coins");
+const levelEl = document.getElementById("level");
+const streakEl = document.getElementById("streak");
+const timerEl = document.getElementById("timer");
+const resultEl = document.getElementById("result");
+const messageEl = document.getElementById("message");
+const progressBar = document.getElementById("progressBar");
+const levelUpEl = document.getElementById("levelUp");
+const newLevelEl = document.getElementById("newLevel");
+
+const buttons = document.querySelectorAll(".color-btn");
+
+function loadGame() {
+
+    const saved = localStorage.getItem(STORAGE_KEY);
+
+    if (saved) {
+
+        try {
+
+            const data = JSON.parse(saved);
+
+            if (
+                typeof data.coins === "number" &&
+                typeof data.level === "number" &&
+                typeof data.streak === "number"
+            ) {
+                game = data;
+            }
+
+        } catch (error) {
+
+            console.log("Saved data could not be loaded.");
+
+        }
+    }
+
+    updateUI();
+}
+
+function saveGame() {
+
+    localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(game)
+    );
+
+}
+
+function updateUI() {
+
+    coinsEl.textContent = game.coins;
+    levelEl.textContent = game.level;
+    streakEl.textContent = game.streak;
+
+}
+
+function getLevelFromCoins() {
+
+    return Math.floor(game.coins / 200) + 1;
+
+}
+
+function startRound() {
+
+    clearInterval(timerInterval);
+
+    timeLeft = 10;
+    predictionMade = false;
+    roundActive = true;
+
+    currentColor = null;
+
+    resultEl.textContent = "Choose a color!";
+    messageEl.textContent = "";
+
+    buttons.forEach(button => {
+        button.disabled = false;
+    });
+
+    updateTimer();
+
+    timerInterval = setInterval(() => {
+
+        timeLeft--;
+
+        updateTimer();
+
+        if (timeLeft <= 0) {
+
+            endRound();
+
+        }
+
+    }, 1000);
+
+}
+
+function updateTimer() {
+
+    timerEl.textContent = timeLeft;
+
+    const percentage = (timeLeft / 10) * 100;
+
+    progressBar.style.width = percentage + "%";
+
+}
+
+function randomColor() {
+
+    const colors = ["red", "blue", "green"];
+
+    const randomIndex =
+        Math.floor(Math.random() * colors.length);
+
+    return colors[randomIndex];
+
+}
+
+function makePrediction(color) {
+
+    if (!roundActive || predictionMade) {
+        return;
+    }
+
+    predictionMade = true;
+
+    buttons.forEach(button => {
+        button.disabled = true;
+    });
+
+    const result = randomColor();
+
+    currentColor = result;
+
+    resultEl.textContent =
+        "Result: " + result.toUpperCase();
+
+    if (color === result) {
+
+        const reward = 20 + (game.level * 5);
+
+        game.coins += reward;
+        game.streak++;
+
+        messageEl.textContent =
+            "🎉 Correct! +" + reward + " coins";
+
+    } else {
+
+        game.coins = Math.max(0, game.coins - 10);
+        game.streak = 0;
+
+        messageEl.textContent =
+            "❌ Wrong! -10 coins";
+
+    }
+
+    checkLevel();
+
+    saveGame();
+    updateUI();
+
+}
+
+function endRound() {
+
+    clearInterval(timerInterval);
+
+    roundActive = false;
+
+    buttons.forEach(button => {
+        button.disabled = true;
+    });
+
+    if (!predictionMade) {
+
+        game.streak = 0;
+
+        messageEl.textContent =
+            "⏰ Time's up! Choose faster next round.";
+
+        saveGame();
+        updateUI();
+
+    }
+
+    setTimeout(startRound, 1500);
+
+}
+
+function checkLevel() {
+
+    const newLevel = getLevelFromCoins();
+
+    if (newLevel > game.level) {
+
+        game.level = newLevel;
+
+        newLevelEl.textContent = newLevel;
+
+        levelUpEl.style.display = "flex";
+
+    }
+
+}
+
+function closeLevelUp() {
+
+    levelUpEl.style.display = "none";
+
+    startRound();
+
+}
+
+function resetGame() {
+
+    const confirmed =
+        confirm("Reset your game progress?");
+
+    if (!confirmed) {
+        return;
+    }
+
+    clearInterval(timerInterval);
+
+    game = {
+        coins: 100,
+        level: 1,
+        streak: 0
+    };
+
+    saveGame();
+    updateUI();
+
+    startRound();
+
+}
+
+loadGame();
+startRound();
+
+</script>
+
+</body>
+</html>
